@@ -13,19 +13,35 @@
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                appUrls = e.target.result.split('\n').map(line => line.trim()).filter(line => line);
+                const lines = e.target.result.split('\n').map(line => line.trim()).filter(line => line);
+                appUrls = lines.filter(line => line.startsWith("https://splunkbase.splunk.com/app/"));
+                if (appUrls.length === 0) {
+                    alert("Keine gültigen Splunk-App-URLs gefunden. Bitte prüfen Sie die Datei.");
+                } else {
+                    alert("Datei erfolgreich geladen. Klicken Sie auf 'Versionen abfragen'.");
+                }
             };
             reader.readAsText(file);
         }
 
         async function fetchSplunkAppVersion(appId) {
-            const response = await fetch(`https://splunkbase.splunk.com/app/${appId}/`);
-            const text = await response.text();
-            const match = text.match(/Current Version:\s*([\d\.]+)/i);
-            return match ? match[1] : 'Nicht gefunden';
+            try {
+                const response = await fetch(`https://splunkbase.splunk.com/app/${appId}/`);
+                const text = await response.text();
+                const match = text.match(/Current Version:\s*([\d\.]+)/i);
+                return match ? match[1] : 'Nicht gefunden';
+            } catch (error) {
+                console.error("Fehler beim Abrufen der Version für App ID:", appId, error);
+                return 'Fehler';
+            }
         }
 
         async function fetchVersions() {
+            if (appUrls.length === 0) {
+                alert("Bitte laden Sie zuerst eine gültige CSV-Datei hoch.");
+                return;
+            }
+
             const tableBody = document.getElementById("appTableBody");
             tableBody.innerHTML = "";
 
