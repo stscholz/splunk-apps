@@ -7,14 +7,15 @@
     <script>
         let appUrls = [];
 
-        async function loadCSVFile() {
-            try {
-                const response = await fetch('splunkapps.csv');
-                const text = await response.text();
-                appUrls = text.split('\n').map(line => line.trim()).filter(line => line);
-            } catch (error) {
-                console.error("Fehler beim Laden der Datei:", error);
-            }
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                appUrls = e.target.result.split('\n').map(line => line.trim()).filter(line => line);
+            };
+            reader.readAsText(file);
         }
 
         async function fetchSplunkAppVersion(appId) {
@@ -40,8 +41,9 @@
         }
     </script>
 </head>
-<body onload="loadCSVFile()">
+<body>
     <h2>Splunk App Version Checker</h2>
+    <input type="file" accept=".csv" onchange="handleFileUpload(event)">
     <button onclick="fetchVersions()">Versionen abfragen</button>
     <table border="1">
         <thead>
