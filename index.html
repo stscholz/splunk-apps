@@ -32,12 +32,21 @@
                     }
                 });
                 if (!response.ok) {
-                    throw new Error(`HTTP-Fehler: ${response.status}`);
+                    console.error(`Fehler beim Abrufen der Daten für App ID ${appId}: ${response.status}`);
+                    return { name: 'Fehler', version: 'Fehler' };
                 }
+                
                 const data = await response.json();
-                const firstRelease = data.releases[0] || {};
+                console.log(`API Antwort für App ID ${appId}:`, data);
+                
+                if (!data.releases || data.releases.length === 0) {
+                    console.warn(`Keine Releases für App ID ${appId} gefunden.`);
+                    return { name: 'Keine Daten', version: 'Keine Daten' };
+                }
+                
+                const firstRelease = data.releases[0];
                 return {
-                    name: firstRelease.name || 'Nicht gefunden',
+                    name: data.title || 'Nicht gefunden',
                     version: firstRelease.product_versions ? firstRelease.product_versions.join(', ') : 'Nicht gefunden'
                 };
             } catch (error) {
